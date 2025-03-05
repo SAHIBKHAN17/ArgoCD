@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-service
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: app-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: app-service
+    spec:
+      containers:
+      - env:
+        - name: ms_addin_whitelist_domains
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_whitelist_domains
+        - name: ms_addin_app_name
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_app_name
+        - name: ms_addin_app_comment
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_app_comment
+        - name: ms_addin_app_type
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_app_type
+        - name: ms_addin_default_enabled
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_default_enabled
+        - name: ms_addin_owner_id
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: ms_addin_owner_id
+        - name: mongo_uri_encrypted
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: mongo_uri_encrypted
+        - name: mongo_uri_sk
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: mongo_uri_sk
+        - name: appgateway_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: appgateway_url
+        - name: spring_data_mongodb_database
+          value: ecmdataext
+        - name: JAVA_TOOL_OPTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: App_JAVA_TOOL_OPTIONS
+        - name: server_port
+          value: "9902"
+        - name: cleaup.policy
+          value: compact,delete
+        - name: auth_whitelist_domains
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: auth_whitelist_domains
+        - name: domain_checks_enabled
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: domain_checks_enabled
+        - name: kafka_mailing_topic_name
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: kafka_mailing_topic_name
+        - name: logging_service_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: logging_service_url
+        - name: user_service_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: user_service_url
+        - name: secretkey_service_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: secretkey_service_url
+        - name: app_service_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: app_service_url
+        - name: role_service_url
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: role_service_url
+        - name: auth_private_key
+          valueFrom:
+            configMapKeyRef:
+              name: ncc-dev-cm
+              key: auth_private_key
+        - name: version
+          value: "1.0"
+        image: ecmregistry.azurecr.io/app_service:#{RELEASE.ARTIFACTS._APP_SERVICE.BUILDID}#
+        imagePullPolicy: Always
+        name: app-service
+      imagePullSecrets:
+      - name: registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: default
+spec:
+  ports:
+  - name: tcp-9902
+    port: 9902
+    protocol: TCP
+    targetPort: 9902
+  selector:
+    name: app-service
+  type: ClusterIP
